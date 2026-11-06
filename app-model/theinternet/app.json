@@ -1,0 +1,6 @@
+{
+  "app": "theinternet",
+  "name": "The Internet",
+  "baseURL": "https://the-internet.herokuapp.com",
+  "description": "The Internet example application hosted by Heroku."
+}

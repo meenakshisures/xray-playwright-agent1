@@ -1,0 +1,131 @@
+<mxfile host="app.diagrams.net" modified="2026-11-05T00:00:00.000Z" agent="test-agent" version="24.0.0" type="device">
+  <diagram name="Migration Architecture" id="xray-pw-migration">
+    <mxGraphModel dx="1100" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===== Title + legend ===== -->
+        <mxCell id="title" value="Xray → Playwright Test Migration Agent" style="text;html=1;fontSize=20;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="8" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="Teal = deterministic code   •   Purple = LLM (AI)   •   Green = execution   •   Yellow = human gate   •   Blue = traceability   •   Grey = I/O" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="34" width="760" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Sources ===== -->
+        <mxCell id="src_xray" value="XRAY (Jira)&#10;GraphQL / REST API · CSV / JSON export" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="64" width="250" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="src_csv" value="CSV test cases" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="62" width="150" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="src_prompt" value="Free-text prompts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="100" width="150" height="32" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Pipeline spine ===== -->
+        <mxCell id="n_ing" value="L1 · Ingestion and Adapters&#10;XrayAdapter · CsvAdapter · PromptAdapter → raw intent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5f0ef;strokeColor=#0d7680;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="168" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_ir" value="L2 · Normalization → Test Case IR  (LLM)&#10;canonical schema (+ Xray key, steps, preconditions); clarify if ambiguous" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6ddf8;strokeColor=#6d4bd1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="252" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_grnd" value="L3 · App Grounding — Playwright MCP&#10;live a11y snapshot + codebase → Page Objects + selector map" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5f0ef;strokeColor=#0d7680;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="336" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_gen" value="L4 · Script Generation  (LLM)&#10;IR + grounded POM + standards → TS spec; ≥1 tagged assert per expected" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6ddf8;strokeColor=#6d4bd1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="420" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_exec" value="L5 · Execution&#10;playwright test · trace / screenshot / video" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d7f0df;strokeColor=#1f8f4e;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="504" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_heal" value="L6 · Analysis and Self-heal  (LLM)&#10;classify → fix cause; retry ≤3; guarded (no weakening); app-bug = STOP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde4d1;strokeColor=#c2560b;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="588" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_rev" value="L7 · Human Review Gate&#10;reviewer approves generated spec (PR) before merge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="672" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_rep" value="L8 · Reporting and Migration Dashboard&#10;per-case status + reason · throughput · unedited pass-rate · coverage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5f0ef;strokeColor=#0d7680;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="756" width="290" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="n_out" value="OUTPUTS&#10;tests/*.spec.ts (git PR) · traceability matrix · report.md/html · traces" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#999999;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="840" width="290" height="52" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Side: App Model Registry ===== -->
+        <mxCell id="n_pom" value="App Model Registry&#10;Page Object + selector library (grounded once, reused across many tests)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="336" width="200" height="72" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Side: Migration Ledger (the migration backbone) ===== -->
+        <mxCell id="n_ledger" value="MIGRATION LEDGER and TRACEABILITY&#10;&#10;Xray key ↔ IR ↔ spec path ↔ run status&#10;&#10;state: migrated / needs-review / failed / blocked&#10;&#10;idempotent batch re-runs&#10;coverage % vs. Xray repository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;verticalAlign=top;spacingTop=8;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="252" width="220" height="472" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Verification gate (deterministic) ===== -->
+        <mxCell id="n_verify" value="VERIFICATION GATE  (deterministic)&#10;every expected result has a tagged assertion;&#10;rejects vacuous / weak / untraced tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="462" width="220" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="e_v1" value="must pass" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#82b366;dashed=1;fontSize=9;" edge="1" parent="1" source="n_gen" target="n_verify"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_v2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="n_verify" target="n_exec"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===== Swappable LLM provider ===== -->
+        <mxCell id="n_llm" value="LLM PROVIDER  (swappable)&#10;Claude · ChatGPT · Copilot&#10;one interface — held to the same gates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6ddf8;strokeColor=#6d4bd1;fontSize=11;fontStyle=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="600" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e_llm1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeColor=#6d4bd1;dashed=1;" edge="1" parent="1" source="n_llm" target="n_gen"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_llm2" value="drives the LLM stages (L2, L4, L6)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeColor=#6d4bd1;dashed=1;fontSize=9;" edge="1" parent="1" source="n_llm" target="n_heal"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===== Foundation band ===== -->
+        <mxCell id="foundation" value="Foundation:  Orchestrator and batch runner  ·  Config and secrets (.env, Jira/Xray API tokens)  ·  Observability (logs, cost, timing)  ·  CI/CD (GitHub Actions)&#10;Persistence:  IR store  ·  Spec repo (git)  ·  Run history / flakiness  ·  Fix Memory (RAG of past patches)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b2531;strokeColor=#1b2531;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="960" width="880" height="64" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Source edges ===== -->
+        <mxCell id="es_x" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#6c8ebf;" edge="1" parent="1" source="src_xray" target="n_ing"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="es_c" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#999999;" edge="1" parent="1" source="src_csv" target="n_ing"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="es_p" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#999999;" edge="1" parent="1" source="src_prompt" target="n_ing"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===== Spine edges ===== -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#555555;" edge="1" parent="1" source="n_ing" target="n_ir"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" value="Test Case IR" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#555555;fontSize=10;" edge="1" parent="1" source="n_ir" target="n_grnd"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" value="grounded Page Objects" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#555555;fontSize=10;" edge="1" parent="1" source="n_grnd" target="n_gen"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#555555;" edge="1" parent="1" source="n_gen" target="n_exec"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" value="on failure" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#c2560b;fontSize=10;" edge="1" parent="1" source="n_exec" target="n_heal"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6" value="on pass" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#1f8f4e;fontSize=10;" edge="1" parent="1" source="n_heal" target="n_rev"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e7" value="approved" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#555555;fontSize=10;" edge="1" parent="1" source="n_rev" target="n_rep"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#555555;" edge="1" parent="1" source="n_rep" target="n_out"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===== Self-heal back edge ===== -->
+        <mxCell id="e_heal" value="fix cause, re-run (≤3)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#c2560b;dashed=1;fontSize=10;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="n_heal" target="n_gen">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="330" y="614" /><mxPoint x="330" y="446" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <!-- ===== Review rejection back edge ===== -->
+        <mxCell id="e_rev" value="changes requested" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#d6b656;dashed=1;fontSize=10;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="n_rev" target="n_gen">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="340" y="698" /><mxPoint x="340" y="440" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ===== Registry link ===== -->
+        <mxCell id="e_pom" value="grounded once, reused" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeColor=#999999;dashed=1;fontSize=9;" edge="1" parent="1" source="n_pom" target="n_grnd"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===== Ledger links ===== -->
+        <mxCell id="e_l1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="n_ir" target="n_ledger"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_l2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="n_rev" target="n_ledger"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_l3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="n_rep" target="n_ledger"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ===== Write-back to Xray (optional) ===== -->
+        <mxCell id="e_wb" value="write-back automation status + link (optional)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6c8ebf;dashed=1;fontSize=10;exitX=1;exitY=0.5;entryX=1;entryY=1;" edge="1" parent="1" source="n_rep" target="src_xray">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="960" y="782" /><mxPoint x="960" y="100" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

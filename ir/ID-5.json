@@ -1,0 +1,32 @@
+{
+  "testId": "ID-5",
+  "title": "Add and remove elements",
+  "source": "testmgmt",
+  "app": "theinternet",
+  "priority": "medium",
+  "preconditions": [],
+  "steps": [
+    "Open https://the-internet.herokuapp.com/add_remove_elements/",
+    "Click \"Add Element\" twice",
+    "Click one Delete button"
+  ],
+  "testData": {},
+  "expected": [
+    {
+      "id": "ID-5-e1",
+      "description": "An \"Add Element\" button is shown and there is no Delete button"
+    },
+    {
+      "id": "ID-5-e2",
+      "description": "Two Delete buttons are shown"
+    },
+    {
+      "id": "ID-5-e3",
+      "description": "One Delete button remains"
+    }
+  ],
+  "tags": [
+    "theinternet"
+  ],
+  "needsClarification": false
+}

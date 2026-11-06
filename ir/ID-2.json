@@ -1,0 +1,30 @@
+{
+  "testId": "ID-2",
+  "title": "Invalid password is rejected",
+  "source": "testmgmt",
+  "app": "theinternet",
+  "priority": "medium",
+  "preconditions": [],
+  "steps": [
+    "Open https://the-internet.herokuapp.com/login",
+    "Enter username and a wrong password, then click Login"
+  ],
+  "testData": {
+    "username": "tomsmith",
+    "password": "wrong"
+  },
+  "expected": [
+    {
+      "id": "ID-2-e1",
+      "description": "Login form is shown"
+    },
+    {
+      "id": "ID-2-e2",
+      "description": "The message \"Your password is invalid!\" is visible and the URL stays on /login"
+    }
+  ],
+  "tags": [
+    "theinternet"
+  ],
+  "needsClarification": false
+}

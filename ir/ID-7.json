@@ -1,0 +1,27 @@
+{
+  "testId": "ID-7",
+  "title": "Dropdown selection",
+  "source": "testmgmt",
+  "app": "theinternet",
+  "priority": "medium",
+  "preconditions": [],
+  "steps": [
+    "Open https://the-internet.herokuapp.com/dropdown",
+    "Select \"Option 2\""
+  ],
+  "testData": {},
+  "expected": [
+    {
+      "id": "ID-7-e1",
+      "description": "The dropdown shows \"Please select an option\""
+    },
+    {
+      "id": "ID-7-e2",
+      "description": "\"Option 2\" is the selected value"
+    }
+  ],
+  "tags": [
+    "theinternet"
+  ],
+  "needsClarification": false
+}

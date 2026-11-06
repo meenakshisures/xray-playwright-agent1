@@ -1,0 +1,30 @@
+{
+  "testId": "ID-4",
+  "title": "Logout returns to login",
+  "source": "testmgmt",
+  "app": "theinternet",
+  "priority": "medium",
+  "preconditions": [],
+  "steps": [
+    "Log in with valid credentials",
+    "Click Logout"
+  ],
+  "testData": {
+    "username": "tomsmith",
+    "password": "SuperSecretPassword!"
+  },
+  "expected": [
+    {
+      "id": "ID-4-e1",
+      "description": "The secure area page is shown"
+    },
+    {
+      "id": "ID-4-e2",
+      "description": "URL is /login and the message \"You logged out of a secure area!\" is visible"
+    }
+  ],
+  "tags": [
+    "theinternet"
+  ],
+  "needsClarification": false
+}

@@ -1,0 +1,30 @@
+{
+  "testId": "ID-1",
+  "title": "Valid login succeeds",
+  "source": "testmgmt",
+  "app": "theinternet",
+  "priority": "medium",
+  "preconditions": [],
+  "steps": [
+    "Open https://the-internet.herokuapp.com/login",
+    "Enter username and password, then click Login"
+  ],
+  "testData": {
+    "username": "tomsmith",
+    "password": "SuperSecretPassword!"
+  },
+  "expected": [
+    {
+      "id": "ID-1-e1",
+      "description": "Login form is shown"
+    },
+    {
+      "id": "ID-1-e2",
+      "description": "URL contains /secure and the message \"You logged into a secure area!\" is visible"
+    }
+  ],
+  "tags": [
+    "theinternet"
+  ],
+  "needsClarification": false
+}

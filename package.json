@@ -1,0 +1,25 @@
+{
+  "name": "test-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI-driven Playwright test-automation agent (POC): prompt/CSV -> IR -> grounded specs -> run -> report.",
+  "scripts": {
+    "parse": "node scripts/parse.mjs",
+    "fetch:xray": "node scripts/xray.mjs",
+    "verify": "node scripts/verify.mjs",
+    "ir:hash": "node scripts/irhash.mjs",
+    "heal:guard": "node scripts/heal-guard.mjs",
+    "test:unit": "node --test \"unit/*.test.mjs\"",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "node scripts/report.mjs",
+    "report:open": "playwright show-report reports/html",
+    "agent": "node scripts/run.mjs",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "typescript": "^5.9.3"
+  }
+}

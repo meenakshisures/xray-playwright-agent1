@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://test-agent/ir/test-case.schema.json",
+  "title": "Test Case IR",
+  "description": "Canonical, framework-agnostic representation of a single test case. Every input source (prompt, CSV, Gherkin, test-management tool) normalizes into this shape before any Playwright code is generated.",
+  "type": "object",
+  "required": ["testId", "title", "source", "steps", "expected"],
+  "additionalProperties": false,
+  "properties": {
+    "testId": { "type": "string", "description": "Stable identifier, e.g. TC-002." },
+    "title": { "type": "string", "description": "Human-readable one-line summary." },
+    "source": { "type": "string", "enum": ["prompt", "csv", "gherkin", "testmgmt"], "description": "Which adapter produced this IR." },
+    "app": { "type": "string", "description": "Target application key (maps to app-model/selectors.json)." },
+    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"], "default": "medium" },
+    "preconditions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "State the app must be in before the steps run (often becomes a fixture or beforeEach)."
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Ordered user actions in plain language. The generator maps each to a Page Object call."
+    },
+    "testData": {
+      "type": "object",
+      "description": "Key/value inputs referenced by the steps.",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "expected": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Assertable expected results. The generator MUST emit at least one expect() per entry.",
+      "items": {
+        "type": "object",
+        "required": ["id", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "Stable id within the test, e.g. 'e1'. A generated spec must carry a '// @covers <testId>:<id>' tag on the assertion that checks this result." },
+          "description": { "type": "string" },
+          "assertionHint": { "type": "string", "description": "Optional machine hint, e.g. 'toHaveURL:/inventory', 'toBeVisible:error'." }
+        }
+      }
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "needsClarification": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when steps or expected results were ambiguous; the agent must ask the user before generating."
+    },
+    "clarificationQuestions": { "type": "array", "items": { "type": "string" } },
+    "needsLlmNormalization": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set by the deterministic parser for free-text prompts that the LLM parser must finish normalizing."
+    }
+  }
+}

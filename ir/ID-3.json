@@ -1,0 +1,30 @@
+{
+  "testId": "ID-3",
+  "title": "Invalid username is rejected",
+  "source": "testmgmt",
+  "app": "theinternet",
+  "priority": "medium",
+  "preconditions": [],
+  "steps": [
+    "Open https://the-internet.herokuapp.com/login",
+    "Enter an unknown username and any password, then click Login"
+  ],
+  "testData": {
+    "username": "nobody",
+    "password": "x"
+  },
+  "expected": [
+    {
+      "id": "ID-3-e1",
+      "description": "Login form is shown"
+    },
+    {
+      "id": "ID-3-e2",
+      "description": "The message \"Your username is invalid!\" is visible"
+    }
+  ],
+  "tags": [
+    "theinternet"
+  ],
+  "needsClarification": false
+}

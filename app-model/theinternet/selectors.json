@@ -1,0 +1,44 @@
+{
+  "app": "theinternet",
+  "baseURL": "https://the-internet.herokuapp.com",
+  "pages": {
+    "login": {
+      "url": "/login",
+      "elements": {
+        "username": { "role": "textbox", "name": "Username" },
+        "password": { "role": "textbox", "name": "Password" },
+        "loginButton": { "role": "button", "name": "Login" },
+        "flashMessage": { "strategy": "getByText", "value": "<message text, supplied per test from its expected result>" }
+      }
+    },
+    "secure": {
+      "url": "/secure",
+      "elements": {
+        "heading": { "role": "heading", "name": "Secure Area" },
+        "logout": { "role": "link", "name": "Logout" }
+      }
+    },
+    "addRemoveElements": {
+      "url": "/add_remove_elements/",
+      "elements": {
+        "addElement": { "role": "button", "name": "Add Element" },
+        "deleteButtons": { "role": "button", "name": "Delete" }
+      }
+    },
+    "checkboxes": {
+      "url": "/checkboxes",
+      "elements": {
+        "checkbox1": { "role": "checkbox", "order": 0 },
+        "checkbox2": { "role": "checkbox", "order": 1 }
+      }
+    },
+    "dropdown": {
+      "url": "/dropdown",
+      "elements": {
+        "dropdown": { "role": "combobox" },
+        "placeholderOption": { "role": "option", "name": "Please select an option" },
+        "option2": { "role": "option", "name": "Option 2" }
+      }
+    }
+  }
+}

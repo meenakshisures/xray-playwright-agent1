@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xray to Playwright Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a single reading column, one wide diagram, tables for the stage-by-stage detail. */
+:root {
+  --bg: #f4f7f9;
+  --surface: #ffffff;
+  --fg: #13212b;
+  --muted: #53656f;
+  --line: #d3dde3;
+  --code: #0b6e8a;       /* deterministic code */
+  --code-bg: #e3f1f5;
+  --ai: #a35a00;         /* AI-driven stage */
+  --ai-bg: #fbeedb;
+  --human: #4b5bb0;      /* human gate */
+  --human-bg: #e8ebf8;
+  --good: #1a7f4b;
+  --bad: #b3261e;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a21; --surface: #16252e; --fg: #e6eef2; --muted: #9bb0ba; --line: #2b3f4a;
+    --code: #5fc4de; --code-bg: #12323d; --ai: #f0b35c; --ai-bg: #3a2a10;
+    --human: #a3b0f2; --human-bg: #22284a; --good: #5dd596; --bad: #ff8a80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a21; --surface: #16252e; --fg: #e6eef2; --muted: #9bb0ba; --line: #2b3f4a;
+  --code: #5fc4de; --code-bg: #12323d; --ai: #f0b35c; --ai-bg: #3a2a10;
+  --human: #a3b0f2; --human-bg: #22284a; --good: #5dd596; --bad: #ff8a80;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.55; font-size: 16px; }
+main { max-width: 980px; margin: 0 auto; padding: 40px 20px 72px; display: flex; flex-direction: column; gap: 40px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 8px; text-wrap: balance; }
+h2 { font-size: 1.25rem; margin: 0 0 12px; text-wrap: balance; }
+h3 { font-size: 1rem; margin: 0 0 6px; }
+p { margin: 0 0 12px; max-width: 70ch; }
+.lede { color: var(--muted); font-size: 1.1rem; max-width: 62ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--code-bg); color: var(--code); padding: 1px 5px; border-radius: 4px; }
+section { display: flex; flex-direction: column; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+.pill { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.code { background: var(--code-bg); color: var(--code); }
+.pill.ai { background: var(--ai-bg); color: var(--ai); }
+.pill.human { background: var(--human-bg); color: var(--human); }
+.pill.good { background: var(--code-bg); color: var(--good); }
+.pill.bad { background: var(--ai-bg); color: var(--bad); }
+figure { margin: 0; }
+figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 10px; max-width: 80ch; }
+svg { width: 100%; height: auto; display: block; color: var(--fg); }
+svg text { font-family: var(--font-body); font-size: 12.5px; fill: currentColor; }
+svg .sub { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); }
+svg .lbl { font-size: 11px; fill: var(--muted); }
+svg .box { fill: var(--surface); stroke-width: 1.6; }
+svg .n-code { stroke: var(--code); }
+svg .n-ai { stroke: var(--ai); }
+svg .n-human { stroke: var(--human); }
+svg .n-src { stroke: var(--muted); stroke-dasharray: 4 3; }
+svg .edge { stroke: currentColor; stroke-width: 1.4; fill: none; }
+svg .edge-soft { stroke: var(--muted); stroke-width: 1.2; fill: none; stroke-dasharray: 5 4; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 0.88rem; color: var(--muted); }
+.chain { display: grid; gap: 8px; font-family: var(--font-mono); font-size: 0.85rem; }
+.chain div { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--code); border-radius: 6px; padding: 8px 12px; overflow-x: auto; white-space: nowrap; }
+.stat { display: flex; flex-wrap: wrap; gap: 14px; }
+.stat .card { flex: 1 1 160px; }
+.stat .num { font-size: 1.9rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .cap { color: var(--muted); font-size: 0.88rem; }
+ul { margin: 0; padding-left: 20px; max-width: 72ch; }
+li { margin-bottom: 6px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--code); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>Xray to Playwright migration agent</h1>
+  <p class="lede">An AI agent that takes manual test cases from Jira Xray, looks at the real application, writes Playwright tests, runs them, repairs its own mistakes, and reports what passed. Every generated assertion links back to the Xray step result it checks.</p>
+</header>
+
+<section>
+  <h2>The idea in three sentences</h2>
+  <div class="grid3">
+    <div class="card"><h3>1. Problem</h3><p>Hundreds of manual test cases live in Xray. Running them by hand is slow, and automating them by hand takes months.</p></div>
+    <div class="card"><h3>2. Approach</h3><p>Use AI only for the fuzzy work: reading plain-English steps, choosing selectors from the live page, diagnosing failures. Use ordinary code for everything that must be reliable.</p></div>
+    <div class="card"><h3>3. Safety</h3><p>The model never grades its own work. Fixed checks catch tests that are green but assert nothing, and block any repair that weakens an assertion.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Architecture</h2>
+  <figure>
+    <svg viewBox="0 0 960 400" role="img" aria-label="Pipeline: Xray, CSV or prompt feed an adapter that produces a standard test-case format; the agent grounds the app, generates specs, passes two gates, executes, heals failures up to three times, reports, and a human reviews.">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+        <marker id="arr-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill: var(--muted)"/>
+        </marker>
+      </defs>
+
+      <!-- sources -->
+      <rect class="box n-src" x="20" y="30" width="120" height="34" rx="6"/><text x="80" y="52" text-anchor="middle">Xray Cloud</text>
+      <rect class="box n-src" x="20" y="82" width="120" height="34" rx="6"/><text x="80" y="104" text-anchor="middle">CSV file</text>
+      <rect class="box n-src" x="20" y="134" width="120" height="34" rx="6"/><text x="80" y="156" text-anchor="middle">Plain prompt</text>
+      <path class="edge" d="M140 47 L170 80 L190 90" marker-end="url(#arr)"/>
+      <path class="edge" d="M140 99 L190 99" marker-end="url(#arr)"/>
+      <path class="edge" d="M140 151 L170 118 L190 108" marker-end="url(#arr)"/>
+
+      <!-- row 1 -->
+      <rect class="box n-code" x="195" y="60" width="140" height="78" rx="8"/>
+      <text class="lbl" x="265" y="77" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 1</text>
+      <text x="265" y="95" text-anchor="middle" font-weight="600">Ingest</text>
+      <text x="265" y="112" text-anchor="middle">one adapter per source</text>
+      <text class="sub" x="265" y="128" text-anchor="middle">scripts/xray.mjs</text>
+
+      <rect class="box n-code" x="385" y="60" width="140" height="78" rx="8"/>
+      <text class="lbl" x="455" y="77" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 2</text>
+      <text x="455" y="95" text-anchor="middle" font-weight="600">Test case IR</text>
+      <text x="455" y="112" text-anchor="middle">one standard JSON shape</text>
+      <text class="sub" x="455" y="128" text-anchor="middle">ir/ID-1.json ...</text>
+
+      <rect class="box n-ai" x="575" y="60" width="140" height="78" rx="8"/>
+      <text class="lbl" x="645" y="77" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 3</text>
+      <text x="645" y="95" text-anchor="middle" font-weight="600">Ground the app</text>
+      <text x="645" y="112" text-anchor="middle">read the live page</text>
+      <text class="sub" x="645" y="128" text-anchor="middle">Playwright MCP</text>
+
+      <rect class="box n-ai" x="765" y="60" width="140" height="78" rx="8"/>
+      <text class="lbl" x="835" y="77" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 4</text>
+      <text x="835" y="95" text-anchor="middle" font-weight="600">Generate</text>
+      <text x="835" y="112" text-anchor="middle">page objects + specs</text>
+      <text class="sub" x="835" y="128" text-anchor="middle">tests/&lt;app&gt;/*.spec.ts</text>
+
+      <path class="edge" d="M335 99 L383 99" marker-end="url(#arr)"/>
+      <path class="edge" d="M525 99 L573 99" marker-end="url(#arr)"/>
+      <path class="edge" d="M715 99 L763 99" marker-end="url(#arr)"/>
+
+      <!-- down -->
+      <path class="edge" d="M835 138 L835 232" marker-end="url(#arr)"/>
+
+      <!-- row 2 (right to left) -->
+      <rect class="box n-code" x="765" y="236" width="140" height="78" rx="8"/>
+      <text class="lbl" x="835" y="253" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 5</text>
+      <text x="835" y="271" text-anchor="middle" font-weight="600">Gates</text>
+      <text x="835" y="288" text-anchor="middle">tsc + assertion coverage</text>
+      <text class="sub" x="835" y="304" text-anchor="middle">npm run verify</text>
+
+      <rect class="box n-code" x="575" y="236" width="140" height="78" rx="8"/>
+      <text class="lbl" x="645" y="253" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 6</text>
+      <text x="645" y="271" text-anchor="middle" font-weight="600">Execute</text>
+      <text x="645" y="288" text-anchor="middle">run in real browser</text>
+      <text class="sub" x="645" y="304" text-anchor="middle">playwright test</text>
+
+      <rect class="box n-ai" x="385" y="236" width="140" height="78" rx="8"/>
+      <text class="lbl" x="455" y="253" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 7</text>
+      <text x="455" y="271" text-anchor="middle" font-weight="600">Analyze + heal</text>
+      <text x="455" y="288" text-anchor="middle">max 3 tries, guarded</text>
+      <text class="sub" x="455" y="304" text-anchor="middle">heal-guard.mjs</text>
+
+      <rect class="box n-code" x="195" y="236" width="140" height="78" rx="8"/>
+      <text class="lbl" x="265" y="253" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 8</text>
+      <text x="265" y="271" text-anchor="middle" font-weight="600">Report</text>
+      <text x="265" y="288" text-anchor="middle">per-test status + proof</text>
+      <text class="sub" x="265" y="304" text-anchor="middle">reports/report.md</text>
+
+      <rect class="box n-human" x="20" y="236" width="130" height="78" rx="8"/>
+      <text class="lbl" x="85" y="253" text-anchor="middle" font-weight="600" style="letter-spacing:.06em">STEP 9</text>
+      <text x="85" y="271" text-anchor="middle" font-weight="600">Human review</text>
+      <text x="85" y="288" text-anchor="middle">approve before merge</text>
+
+      <path class="edge" d="M765 275 L717 275" marker-end="url(#arr)"/><text class="lbl" x="741" y="268" text-anchor="middle">pass</text>
+      <path class="edge" d="M575 275 L527 275" marker-end="url(#arr)"/><text class="lbl" x="551" y="268" text-anchor="middle">fail</text>
+      <path class="edge" d="M385 275 L337 275" marker-end="url(#arr)"/><text class="lbl" x="361" y="268" text-anchor="middle">fixed</text>
+      <path class="edge" d="M195 275 L152 275" marker-end="url(#arr)"/>
+
+      <!-- retry loop -->
+      <path class="edge-soft" d="M470 236 C 500 196, 600 196, 630 236" marker-end="url(#arr-soft)"/>
+      <text class="lbl" x="550" y="196" text-anchor="middle">re-run after fix</text>
+
+      <!-- all-pass bypass -->
+      <path class="edge-soft" d="M645 314 L645 352 L265 352 L265 316" marker-end="url(#arr-soft)"/>
+      <text class="lbl" x="455" y="370" text-anchor="middle">all tests pass: straight to report</text>
+    </svg>
+    <figcaption>The pipeline runs top row left to right, then bottom row right to left. Stages with an amber outline use the AI model; teal outlines are plain deterministic code; the blue outline is a person.</figcaption>
+  </figure>
+  <div class="legend">
+    <span><span class="pill code">Code</span> same result every run</span>
+    <span><span class="pill ai">AI</span> model decides, code checks</span>
+    <span><span class="pill human">Human</span> sign-off</span>
+  </div>
+</section>
+
+<section>
+  <h2>What happens at each step</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Step</th><th>Who</th><th>Input to output</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td>Step 1: Ingest</td><td><span class="pill code">Code</span></td><td>Xray project, JQL query to <code>ir/*.json</code></td><td>Signs in with the Xray Cloud API key from <code>.env</code>, pulls tests through the GraphQL API, maps each one. Flags tests with no steps or no expected result instead of inventing one.</td></tr>
+      <tr><td>Step 2: Test case IR</td><td><span class="pill code">Code</span></td><td>Any source to one JSON shape</td><td>Intermediate representation: key, title, steps, test data, and expected results with ids such as <code>ID-2-e2</code>. Adding a new source, for example TestRail, means writing one new adapter and nothing else.</td></tr>
+      <tr><td>Step 3: Ground the app</td><td><span class="pill ai">AI</span></td><td>Live app to <code>app-model/&lt;app&gt;/</code></td><td>Opens each page in a real browser through Playwright MCP, reads its accessibility tree, and writes page objects and a selector map from what is really on screen. Selectors never come from memory.</td></tr>
+      <tr><td>Step 4: Generate</td><td><span class="pill ai">AI</span></td><td>IR + page objects to <code>tests/&lt;app&gt;/*.spec.ts</code></td><td>One <code>test()</code> per test case, titled with the Jira key. At least one assertion per expected result, each tagged <code>// @covers ID-2:ID-2-e2</code>.</td></tr>
+      <tr><td>Step 5: Gates</td><td><span class="pill code">Code</span></td><td>Specs to pass or fail</td><td><code>tsc</code> catches type errors. <code>verify</code> checks every expected result has a tagged assertion and rejects skipped or focused tests.</td></tr>
+      <tr><td>Step 6: Execute</td><td><span class="pill code">Code</span></td><td>Specs to <code>reports/results.json</code></td><td>Runs Playwright against the app. On failure it saves a screenshot, video and trace.</td></tr>
+      <tr><td>Step 7: Analyze and heal</td><td><span class="pill ai">AI</span> + <span class="pill code">Code</span></td><td>Failure evidence to a small fix</td><td>The model classifies each failure (locator, timing, assertion, data, real app bug) and proposes the smallest fix, up to 3 attempts. <code>heal-guard</code> blocks any fix that weakens an assertion. A real app bug is reported, never hidden.</td></tr>
+      <tr><td>Step 8: Report</td><td><span class="pill code">Code</span></td><td>Results to <code>report.md</code></td><td>Status per Jira key, the reason for each failure, and links to the evidence.</td></tr>
+      <tr><td>Step 9: Human review</td><td><span class="pill human">Human</span></td><td>Specs to merged tests</td><td>A person reviews the generated tests before they are merged. No automated check can prove an English sentence and its code mean the same thing.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Traceability: one id from Jira to the assertion</h2>
+  <p>The expected-result id carries the Jira key, so any line in a report can be traced back to the manual step it came from.</p>
+  <div class="chain">
+    <div>Xray test ID-2, step 2, expected result: "The message Your password is invalid! is visible and the URL stays on /login"</div>
+    <div>ir/ID-2.json  expected id: ID-2-e2</div>
+    <div>tests/theinternet/authentication.spec.ts  // @covers ID-2:ID-2-e2  await expect(...)</div>
+    <div>reports/verification.md  ID-2   coverage 2/2   asserts 3   PASS</div>
+  </div>
+</section>
+
+<section>
+  <h2>How mistakes by the AI are caught</h2>
+  <p>The dangerous failure is a test that passes but checks nothing, because re-running it never reveals the problem. So correctness is enforced by fixed checks, not by the model.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Model mistake</th><th>What catches it</th></tr></thead>
+    <tbody>
+      <tr><td>Syntax or type error</td><td><code>tsc --noEmit</code></td></tr>
+      <tr><td>Missing or empty assertion</td><td><code>npm run verify</code> requires a tagged assertion for every expected result</td></tr>
+      <tr><td>Wrong or stale coverage tag</td><td><code>verify</code> rejects ids the IR does not define</td></tr>
+      <tr><td>Invented or wrong selector</td><td>The test fails when run, then heal, then human review</td></tr>
+      <tr><td>Fix that weakens an assertion to go green</td><td><code>heal-guard</code> blocks downgraded matchers, removed assertions and added skips</td></tr>
+      <tr><td>Skipped or focused test slipping through</td><td><code>verify</code> fails on <code>test.skip</code> and <code>test.only</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Proof run: 7 Xray tests against an open-source app</h2>
+  <p>The tests were created in a Jira Xray Cloud project (key ID) for The Internet, an open-source practice app. They were fetched through the API and migrated by the Copilot agent in VS Code with no sample data.</p>
+  <div class="stat">
+    <div class="card"><div class="num">7</div><div class="cap">tests fetched from Xray</div></div>
+    <div class="card"><div class="num">7 / 7</div><div class="cap">passed the assertion-coverage gate</div></div>
+    <div class="card"><div class="num">6 / 7</div><div class="cap">passed when executed (86%)</div></div>
+  </div>
+  <div class="scroll" style="margin-top:14px">
+  <table>
+    <thead><tr><th>Test</th><th>Result</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>ID-1 Valid login succeeds</td><td><span class="pill good">Pass</span></td><td></td></tr>
+      <tr><td>ID-2 Invalid password is rejected</td><td><span class="pill good">Pass</span></td><td></td></tr>
+      <tr><td>ID-3 Invalid username is rejected</td><td><span class="pill good">Pass</span></td><td></td></tr>
+      <tr><td>ID-4 Logout returns to login</td><td><span class="pill bad">Fail</span></td><td>Xray says the message is "You logged out of a secure area!". The live app shows "You logged out of the secure area!". The agent kept the Xray assertion, reported the failure, and did not edit the expected text to turn it green. This is the behavior the design intends. Fix: correct the wording in the Xray step and re-fetch.</td></tr>
+      <tr><td>ID-5 Add and remove elements</td><td><span class="pill good">Pass</span></td><td></td></tr>
+      <tr><td>ID-6 Checkbox states</td><td><span class="pill good">Pass</span></td><td></td></tr>
+      <tr><td>ID-7 Dropdown selection</td><td><span class="pill good">Pass</span></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Known rough edges</h2>
+  <ul>
+    <li>On the demo machine, <code>npm test</code> could not find the local Playwright command, so the agent ran the Playwright CLI directly. Same tests, different launcher; to fix in setup.</li>
+    <li>The browser tool hit a DNS error once while grounding. The agent used page snapshots it had already saved, and the tests then ran against the live site.</li>
+    <li>Only manual Xray steps and basic Gherkin are mapped. Parameterized tests, data tables and preconditions with their own steps are not handled yet.</li>
+    <li>Passing the gates shows each expected result is asserted, not that the assertion means what the author intended. That is why human review stays in the loop.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Next steps</h2>
+  <ul>
+    <li>Run a measured pilot of 30 to 50 real Xray tests: unedited pass rate (target 80%), time per test, and how often review catches something the gates passed.</li>
+    <li>Add a migration ledger: Xray key, spec file and status in one table, so re-runs only touch new or failed tests.</li>
+    <li>Open generated tests as pull requests for review, and optionally write status back to Xray.</li>
+    <li>Add mutation checks: deliberately break the app state and confirm the test now fails.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Where things live</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Path</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>.github/agents/test-author.agent.md</code></td><td>The Copilot agent: its pipeline and rules</td></tr>
+      <tr><td><code>.github/skills/</code></td><td>Six skills the agent follows: parse, ground, generate, execute, heal, report</td></tr>
+      <tr><td><code>.vscode/mcp.json</code></td><td>Connects Copilot to the Playwright browser tool</td></tr>
+      <tr><td><code>scripts/xray.mjs</code></td><td>Xray Cloud adapter</td></tr>
+      <tr><td><code>scripts/verify.mjs</code>, <code>heal-guard.mjs</code></td><td>The two deterministic safety gates</td></tr>
+      <tr><td><code>ir/</code></td><td>Standard test-case JSON, one file per Jira test</td></tr>
+      <tr><td><code>app-model/&lt;app&gt;/</code></td><td>App URL, selectors and page objects, one folder per app</td></tr>
+      <tr><td><code>tests/&lt;app&gt;/</code></td><td>Generated Playwright specs</td></tr>
+      <tr><td><code>reports/</code>, <code>artifacts/</code></td><td>Run report, verification table, screenshots, videos, traces</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+</body>
+</html>
