@@ -7,6 +7,8 @@
   "scripts": {
     "parse": "node scripts/parse.mjs",
     "fetch:xray": "node scripts/xray.mjs",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+    "clarify": "node scripts/clarify.mjs",
     "verify": "node scripts/verify.mjs",
     "ir:hash": "node scripts/irhash.mjs",
     "heal:guard": "node scripts/heal-guard.mjs",

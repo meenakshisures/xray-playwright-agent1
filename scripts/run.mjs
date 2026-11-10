@@ -19,12 +19,23 @@ const step = (label, cmd, args) => {
   return r.status ?? 1;
 };
 
-step('1/4  Parse inputs -> IR', 'node', ['scripts/parse.mjs']);
-// Static verification gate: do every spec's assertions cover its expected results?
-const verifyStatus = step('2/4  Verify assertion coverage', 'node', ['scripts/verify.mjs']);
+step('1/6  Parse inputs -> IR', 'node', ['scripts/parse.mjs']);
+// One consolidated list of tests with no steps / expected results (a report, never a gate).
+step('2/6  Clarification report', 'node', ['scripts/clarify.mjs']);
+// Gate 1: the generated code must compile. Invoked via node so it works even where the
+// node_modules/.bin launchers are missing (see README Windows note).
+const typeStatus = step('3/6  Type check (tsc)', 'node', ['node_modules/typescript/bin/tsc', '--noEmit']);
+if (typeStatus !== 0) {
+  console.log('\n✖ Type check FAILED — fix the compile errors above. Tests were not run.');
+  process.exit(1);
+}
+// Gate 2: do every spec's assertions cover its expected results?
+const verifyStatus = step('4/6  Verify assertion coverage', 'node', ['scripts/verify.mjs']);
 // Tests may fail — that is expected input to the report, so don't abort here.
-const testStatus = step('3/4  Execute Playwright specs', 'npx', ['playwright', 'test']);
-step('4/4  Generate Markdown report', 'node', ['scripts/report.mjs']);
+const testStatus = step('5/6  Execute Playwright specs', 'npx', ['playwright', 'test']);
+// Pass the format through:  npm run agent -- --format html,csv   (default md)
+const fi = process.argv.indexOf('--format');
+step('6/6  Generate report', 'node', ['scripts/report.mjs', ...(fi === -1 ? [] : ['--format', process.argv[fi + 1] ?? ''])]);
 
 if (verifyStatus !== 0) console.log('\n⚠  Verification FAILED — see reports/verification.md (a spec does not assert what its test case requires).');
 console.log(`\nDone. See reports/report.md and reports/verification.md (\`npm run report:open\` for the HTML report).`);

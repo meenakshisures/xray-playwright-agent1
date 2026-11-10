@@ -192,6 +192,7 @@ async function main() {
   const flagged = records.filter((r) => r.needsClarification);
   console.log(`Xray: fetched ${records.length} test(s) for JQL [${jql}] -> ir/`);
   for (const r of flagged) console.log(`  ⚠ ${r.testId} needs clarification: ${r.clarificationQuestions.join(' | ')}`);
+  if (flagged.length) console.log(`  → ${flagged.length} flagged. Run \`npm run clarify\` for one consolidated report (reports/clarification.md and .csv).`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
